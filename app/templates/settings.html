@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Settings — Site Monitor{% endblock %}
+
+{% block content %}
+<div x-data="settingsPage()" x-init="init()">
+
+  <h1 class="text-2xl font-bold text-white mb-8">Settings</h1>
+
+  <div class="max-w-lg space-y-8">
+
+    <!-- ntfy Settings -->
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-5">
+      <h2 class="text-lg font-semibold text-white">Notifications (ntfy)</h2>
+
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">ntfy Server</label>
+        <input
+          x-model="settings.ntfy_server"
+          type="url"
+          class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
+          placeholder="https://ntfy.sh"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Default ntfy Topic</label>
+        <input
+          x-model="settings.ntfy_topic"
+          type="text"
+          class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500"
+          placeholder="site-monitor"
+        />
+        <p class="text-xs text-gray-600 mt-1">Individual sites can override this with their own topic.</p>
+      </div>
+
+      <button
+        @click="testNtfy()"
+        :disabled="testing"
+        class="text-sm bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-gray-300 px-4 py-2 rounded-lg transition-colors"
+      >
+        <span x-show="!testing">Send Test Notification</span>
+        <span x-show="testing" class="animate-pulse">Sending…</span>
+      </button>
+
+      <p
+        x-show="ntfyResult"
+        x-text="ntfyResult"
+        :class="ntfyOk ? 'text-green-400' : 'text-red-400'"
+        class="text-sm"
+      ></p>
+    </div>
+
+    <!-- Capture Settings -->
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-5">
+      <h2 class="text-lg font-semibold text-white">Capture & Retention</h2>
+
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Request Timeout (seconds)</label>
+        <input
+          x-model="settings.request_timeout"
+          type="number"
+          min="5"
+          max="120"
+          class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Pixel Diff Threshold (%)</label>
+        <input
+          x-model="settings.pixel_diff_threshold"
+          type="number"
+          min="0"
+          max="100"
+          step="0.1"
+          class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+        />
+        <p class="text-xs text-gray-600 mt-1">Minimum pixel change % to trigger a "changed" alert.</p>
+      </div>
+
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Screenshot Retention (days)</label>
+        <input
+          x-model="settings.screenshot_retention_days"
+          type="number"
+          min="1"
+          max="365"
+          class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+        />
+        <p class="text-xs text-gray-600 mt-1">Screenshots older than this are automatically deleted.</p>
+      </div>
+    </div>
+
+    <!-- Save button -->
+    <div class="flex items-center gap-4">
+      <button
+        @click="saveSettings()"
+        :disabled="saving"
+        class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium px-6 py-2 rounded-lg transition-colors"
+      >
+        <span x-show="!saving">Save Settings</span>
+        <span x-show="saving" class="animate-pulse">Saving…</span>
+      </button>
+      <p x-show="saveResult" x-text="saveResult" :class="saveOk ? 'text-green-400' : 'text-red-400'" class="text-sm"></p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function settingsPage() {
+  return {
+    settings: {{ settings | tojson }},
+    saving: false,
+    saveResult: '',
+    saveOk: false,
+    testing: false,
+    ntfyResult: '',
+    ntfyOk: false,
+
+    init() {},
+
+    async saveSettings() {
+      this.saving = true;
+      this.saveResult = '';
+      try {
+        const resp = await fetch('/api/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.settings),
+        });
+        if (resp.ok) {
+          this.saveOk = true;
+          this.saveResult = 'Settings saved.';
+        } else {
+          this.saveOk = false;
+          this.saveResult = 'Failed to save settings.';
+        }
+      } catch (e) {
+        this.saveOk = false;
+        this.saveResult = e.message;
+      } finally {
+        this.saving = false;
+        setTimeout(() => { this.saveResult = ''; }, 3000);
+      }
+    },
+
+    async testNtfy() {
+      this.testing = true;
+      this.ntfyResult = '';
+      try {
+        const resp = await fetch('/api/settings/test-ntfy', { method: 'POST' });
+        if (resp.ok) {
+          this.ntfyOk = true;
+          this.ntfyResult = 'Test notification sent!';
+        } else {
+          const err = await resp.json();
+          this.ntfyOk = false;
+          this.ntfyResult = err.detail || 'Failed to send notification';
+        }
+      } catch (e) {
+        this.ntfyOk = false;
+        this.ntfyResult = e.message;
+      } finally {
+        this.testing = false;
+        setTimeout(() => { this.ntfyResult = ''; }, 5000);
+      }
+    },
+  };
+}
+</script>
+{% endblock %}

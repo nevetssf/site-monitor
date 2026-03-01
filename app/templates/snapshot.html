@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Snapshot #{{ snapshot.id }} — Site Monitor{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<div class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+  <a href="/" class="hover:text-white">Dashboard</a>
+  <span>/</span>
+  <a href="/sites/{{ site.id }}" class="hover:text-white">{{ site.name }}</a>
+  <span>/</span>
+  <span class="text-gray-300">Snapshot #{{ snapshot.id }}</span>
+</div>
+
+<div class="mb-6 flex items-center gap-4">
+  <h1 class="text-xl font-bold text-white">Snapshot #{{ snapshot.id }}</h1>
+  {% if snapshot.error_message %}
+  <span class="text-sm bg-red-700/20 text-red-400 px-3 py-1 rounded-full">ERROR</span>
+  {% elif snapshot.changed %}
+  <span class="text-sm bg-red-500/20 text-red-400 px-3 py-1 rounded-full">CHANGED</span>
+  {% else %}
+  <span class="text-sm bg-green-500/20 text-green-400 px-3 py-1 rounded-full">OK</span>
+  {% endif %}
+  <span class="text-sm text-gray-500">{{ snapshot.captured_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</span>
+</div>
+
+{% if snapshot.error_message %}
+<div class="bg-red-950/30 border border-red-800 rounded-xl p-4 text-red-400 text-sm mb-6">
+  <strong>Error:</strong> {{ snapshot.error_message }}
+</div>
+{% endif %}
+
+<!-- Metadata -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+  {% if snapshot.diff_score is not none %}
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+    <p class="text-xs text-gray-500 mb-1">Pixel Diff</p>
+    <p class="text-lg font-semibold text-white">{{ '%.2f' | format(snapshot.diff_score) }}%</p>
+  </div>
+  {% endif %}
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+    <p class="text-xs text-gray-500 mb-1">HTML Size</p>
+    <p class="text-lg font-semibold text-white">
+      {% if snapshot.html_size %}{{ snapshot.html_size | filesizeformat }}{% else %}—{% endif %}
+    </p>
+  </div>
+  <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 col-span-2">
+    <p class="text-xs text-gray-500 mb-1">HTML Hash</p>
+    <p class="text-sm font-mono text-gray-300 truncate">{{ snapshot.html_hash }}</p>
+  </div>
+</div>
+
+<!-- Side-by-side screenshots -->
+{% if snapshot.screenshot_path %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+  <!-- Previous -->
+  <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+    <div class="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
+      <p class="text-sm font-medium text-gray-300">
+        {% if prev_snapshot %}Previous ({{ prev_snapshot.captured_at.strftime('%Y-%m-%d %H:%M') }}){% else %}No previous snapshot{% endif %}
+      </p>
+    </div>
+    <div class="overflow-auto max-h-[600px]">
+      {% if prev_snapshot and prev_snapshot.screenshot_path %}
+      <img src="/snapshots/{{ prev_snapshot.id }}/screenshot" alt="Previous screenshot" class="w-full" />
+      {% else %}
+      <div class="h-48 flex items-center justify-center text-gray-600 text-sm">Baseline (first capture)</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Current -->
+  <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+    <div class="px-4 py-3 border-b border-gray-800">
+      <p class="text-sm font-medium text-gray-300">Current ({{ snapshot.captured_at.strftime('%Y-%m-%d %H:%M') }})</p>
+    </div>
+    <div class="overflow-auto max-h-[600px]">
+      <img src="/snapshots/{{ snapshot.id }}/screenshot" alt="Current screenshot" class="w-full" />
+    </div>
+  </div>
+
+</div>
+{% endif %}
+
+<div class="mt-6">
+  <a href="/sites/{{ site.id }}" class="text-sm text-blue-400 hover:text-blue-300">← Back to {{ site.name }}</a>
+</div>
+
+{% endblock %}

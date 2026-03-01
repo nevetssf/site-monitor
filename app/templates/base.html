@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Site Monitor{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    [x-cloak] { display: none !important; }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+  <!-- Nav -->
+  <nav class="bg-gray-900 border-b border-gray-800 px-6 py-3 flex items-center justify-between">
+    <a href="/" class="text-lg font-semibold text-white flex items-center gap-2">
+      <span class="text-blue-400">◉</span> Site Monitor
+    </a>
+    <div class="flex gap-6 text-sm text-gray-400">
+      <a href="/" class="hover:text-white transition-colors">Dashboard</a>
+      <a href="/settings" class="hover:text-white transition-colors">Settings</a>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <main class="px-6 py-8 max-w-7xl mx-auto">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

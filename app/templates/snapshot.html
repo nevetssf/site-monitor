@@ -21,7 +21,7 @@
   {% else %}
   <span class="text-sm bg-green-500/20 text-green-400 px-3 py-1 rounded-full">OK</span>
   {% endif %}
-  <span class="text-sm text-gray-500">{{ snapshot.captured_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</span>
+  <time class="text-sm text-gray-500" data-utc="{{ snapshot.captured_at.strftime('%Y-%m-%dT%H:%M:%S') }}" data-seconds="1"></time>
 </div>
 
 {% if snapshot.error_message %}
@@ -58,7 +58,7 @@
   <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
     <div class="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
       <p class="text-sm font-medium text-gray-300">
-        {% if prev_snapshot %}Previous ({{ prev_snapshot.captured_at.strftime('%Y-%m-%d %H:%M') }}){% else %}No previous snapshot{% endif %}
+        {% if prev_snapshot %}Previous (<time data-utc="{{ prev_snapshot.captured_at.strftime('%Y-%m-%dT%H:%M:%S') }}"></time>){% else %}No previous snapshot{% endif %}
       </p>
     </div>
     <div class="overflow-auto max-h-[600px]">
@@ -73,7 +73,7 @@
   <!-- Current -->
   <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
     <div class="px-4 py-3 border-b border-gray-800">
-      <p class="text-sm font-medium text-gray-300">Current ({{ snapshot.captured_at.strftime('%Y-%m-%d %H:%M') }})</p>
+      <p class="text-sm font-medium text-gray-300">Current (<time data-utc="{{ snapshot.captured_at.strftime('%Y-%m-%dT%H:%M:%S') }}"></time>)</p>
     </div>
     <div class="overflow-auto max-h-[600px]">
       <img src="/snapshots/{{ snapshot.id }}/screenshot" alt="Current screenshot" class="w-full" />

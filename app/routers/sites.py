@@ -118,7 +118,7 @@ async def site_detail(
         select(Snapshot)
         .where(Snapshot.site_id == site_id)
         .order_by(Snapshot.captured_at.desc())
-        .limit(20)
+        .limit(500)
     )
     snapshots = snap_result.scalars().all()
 

@@ -55,14 +55,14 @@
           </div>
           <div class="flex justify-between">
             <dt class="text-gray-500">Last Checked</dt>
-            <dd class="text-gray-300" id="last-checked">
-              {% if site.last_checked_at %}{{ site.last_checked_at.strftime('%Y-%m-%d %H:%M') }}{% else %}Never{% endif %}
+            <dd class="text-gray-300">
+              {% if site.last_checked_at %}<time data-utc="{{ site.last_checked_at.strftime('%Y-%m-%dT%H:%M:%S') }}"></time>{% else %}Never{% endif %}
             </dd>
           </div>
           <div class="flex justify-between">
             <dt class="text-gray-500">Last Changed</dt>
             <dd class="text-gray-300">
-              {% if site.last_changed_at %}{{ site.last_changed_at.strftime('%Y-%m-%d %H:%M') }}{% else %}Never{% endif %}
+              {% if site.last_changed_at %}<time data-utc="{{ site.last_changed_at.strftime('%Y-%m-%dT%H:%M:%S') }}"></time>{% else %}Never{% endif %}
             </dd>
           </div>
           <div class="flex justify-between">
@@ -153,7 +153,7 @@
               {% else %}
               <span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">OK</span>
               {% endif %}
-              <span class="text-xs text-gray-500">{{ snap.captured_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+              <time class="text-xs text-gray-500" data-utc="{{ snap.captured_at.strftime('%Y-%m-%dT%H:%M:%S') }}" data-seconds="1"></time>
             </div>
 
             {% if snap.error_message %}

@@ -29,5 +29,17 @@
   </main>
 
   <script src="/static/js/app.js"></script>
+  <script>
+    // Convert all <time data-utc="..."> elements to local time on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('time[data-utc]').forEach(el => {
+        const d = new Date(el.dataset.utc + 'Z');
+        el.textContent = d.toLocaleString(undefined, {
+          year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', minute: '2-digit', second: el.dataset.seconds ? '2-digit' : undefined,
+        });
+      });
+    });
+  </script>
 </body>
 </html>

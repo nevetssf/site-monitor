@@ -2,7 +2,7 @@ services:
   site-monitor:
     build: .
     ports:
-      - "8000:8000"
+      - "8010:8000"
     volumes:
       - ./data:/app/data
     shm_size: "256m"

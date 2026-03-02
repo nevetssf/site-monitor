@@ -27,8 +27,12 @@ async def _capture_page(url: str, timeout_s: int) -> tuple[bytes, str]:
         )
         try:
             page = await browser.new_page()
-            await page.goto(url, wait_until="load", timeout=timeout_s * 1000)
-            await page.wait_for_timeout(2000)
+            # Use domcontentloaded — fires once HTML is parsed, doesn't wait
+            # for images/fonts/subframes. Much more reliable than load/networkidle
+            # on JS-heavy or slow sites.
+            await page.goto(url, wait_until="domcontentloaded", timeout=timeout_s * 1000)
+            # Give JS a few seconds to render dynamic content
+            await page.wait_for_timeout(3000)
             png_bytes = await page.screenshot(full_page=True)
             html = await page.content()
             return png_bytes, html

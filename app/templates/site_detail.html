@@ -121,14 +121,22 @@
 
     <!-- Right: Snapshot history -->
     <div class="flex-1">
-      <h2 class="text-lg font-semibold text-white mb-4">Snapshot History</h2>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-white">Snapshot History</h2>
+        {% if snapshots %}
+        <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer select-none">
+          <input type="checkbox" x-model="changesOnly" class="accent-blue-500" />
+          Changes Only
+        </label>
+        {% endif %}
+      </div>
 
       {% if not snapshots %}
       <p class="text-gray-500 text-sm">No snapshots yet. Click "Check Now" to capture the first snapshot.</p>
       {% else %}
       <div class="space-y-3">
         {% for snap in snapshots %}
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-4">
+        <div x-show="!changesOnly || isVisible({{ loop.index0 }})" class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-4">
 
           <!-- Thumbnail -->
           <div class="w-20 h-14 shrink-0 bg-gray-800 rounded overflow-hidden">
@@ -256,10 +264,13 @@
 </div>
 
 <script>
+const snapshotChanged = {{ snapshots | map(attribute='changed') | list | tojson }};
+
 function siteDetail() {
   return {
     checking: false,
     isActive: {{ 'true' if site.is_active else 'false' }},
+    changesOnly: true,
     showEditModal: false,
     saving: false,
     editError: '',
@@ -274,6 +285,13 @@ function siteDetail() {
     },
 
     init() {},
+
+    isVisible(i) {
+      const anyChanged = snapshotChanged.some(c => c);
+      if (!anyChanged) return i === 0;
+      // Show the changed snapshot ("right after") or the one just before it in time ("right before")
+      return snapshotChanged[i] || (i > 0 && snapshotChanged[i - 1]);
+    },
 
     async checkNow(siteId) {
       this.checking = true;

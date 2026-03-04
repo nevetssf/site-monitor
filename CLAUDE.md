@@ -12,11 +12,12 @@ docker-compose logs -f      # View logs
 ```
 App runs at http://localhost:8010 (host port 8010 → container port 8000).
 
-**Run locally:**
+**Run locally (requires Python 3.10+):**
 ```bash
-pip install -r requirements.txt
-playwright install chromium
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+python3.12 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/playwright install chromium
+.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
 There are no tests in this project.

@@ -19,7 +19,7 @@ AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 DEFAULT_SETTINGS = {
     "ntfy_server": "https://ntfy.sh",
     "ntfy_topic": "site-monitor",
-    "screenshot_retention_days": "30",
+    "screenshot_retention_days": "7",
     "request_timeout": "30",
     "pixel_diff_threshold": "1.0",
 }
@@ -28,6 +28,15 @@ DEFAULT_SETTINGS = {
 async def init_db() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Migrate: add jitter_pct column if it doesn't exist (existing DBs)
+        try:
+            await conn.execute(
+                __import__("sqlalchemy").text(
+                    "ALTER TABLE sites ADD COLUMN jitter_pct INTEGER DEFAULT 10"
+                )
+            )
+        except Exception:
+            pass  # Column already exists
 
     async with AsyncSessionLocal() as session:
         for key, value in DEFAULT_SETTINGS.items():

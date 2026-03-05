@@ -14,6 +14,7 @@ class Site(Base):
     name: Mapped[str] = mapped_column(Text, nullable=False)
     url: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
     check_interval: Mapped[int] = mapped_column(Integer, default=300)
+    jitter_pct: Mapped[int] = mapped_column(Integer, default=10)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     ntfy_topic: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

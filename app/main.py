@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI):
         result = await session.execute(select(Site).where(Site.is_active == True))
         active_sites = result.scalars().all()
         for site in active_sites:
-            add_or_replace_job(site.id, site.check_interval)
+            add_or_replace_job(site.id, site.check_interval, site.jitter_pct)
 
     scheduler.start()
     logger.info("Scheduler started with %d jobs", len(scheduler.get_jobs()))

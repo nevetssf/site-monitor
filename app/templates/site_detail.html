@@ -66,6 +66,16 @@
             </dd>
           </div>
           <div class="flex justify-between">
+            <dt class="text-gray-500">Jitter</dt>
+            <dd class="text-gray-300">{{ site.jitter_pct }}%</dd>
+          </div>
+          {% if next_run_time %}
+          <div class="flex justify-between">
+            <dt class="text-gray-500">Next Check</dt>
+            <dd class="text-gray-300"><time data-utc="{{ next_run_time }}"></time></dd>
+          </div>
+          {% endif %}
+          <div class="flex justify-between">
             <dt class="text-gray-500">Active</dt>
             <dd>
               <span class="{{ 'text-green-400' if site.is_active else 'text-gray-500' }}">
@@ -124,10 +134,21 @@
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold text-white">Snapshot History</h2>
         {% if snapshots %}
-        <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer select-none">
-          <input type="checkbox" x-model="changesOnly" class="accent-blue-500" />
-          Changes Only
-        </label>
+        <div class="flex items-center gap-3">
+          <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer select-none">
+            <input type="checkbox" x-model="changesOnly" class="accent-blue-500" />
+            Changes Only
+          </label>
+          <button
+            @click="hideErrors = !hideErrors"
+            class="text-xs px-3 py-1 rounded-lg border transition-colors"
+            :class="hideErrors
+              ? 'bg-red-950/40 border-red-800 text-red-400'
+              : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white'"
+          >
+            <span x-text="hideErrors ? 'Errors hidden' : 'Hide errors'"></span>
+          </button>
+        </div>
         {% endif %}
       </div>
 
@@ -136,7 +157,10 @@
       {% else %}
       <div class="space-y-3">
         {% for snap in snapshots %}
-        <div x-show="!changesOnly || isVisible({{ loop.index0 }})" class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-4">
+        <div
+          class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-4"
+          x-show="(!changesOnly || isVisible({{ loop.index0 }})){% if snap.error_message %} && !hideErrors{% endif %}"
+        >
 
           <!-- Thumbnail -->
           <div class="w-20 h-14 shrink-0 bg-gray-800 rounded overflow-hidden">
@@ -213,20 +237,33 @@
             <input x-model="edit.url" required type="url"
               class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
           </div>
-          <div>
-            <label class="block text-sm text-gray-400 mb-1">Check Interval</label>
-            <select x-model="edit.check_interval"
-              class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
-              <option value="60">1 minute</option>
-              <option value="300">5 minutes</option>
-              <option value="900">15 minutes</option>
-              <option value="1800">30 minutes</option>
-              <option value="3600">1 hour</option>
-              <option value="7200">2 hours</option>
-              <option value="21600">6 hours</option>
-              <option value="43200">12 hours</option>
-              <option value="86400">24 hours</option>
-            </select>
+          <div class="flex gap-3">
+            <div class="flex-1">
+              <label class="block text-sm text-gray-400 mb-1">Check Interval</label>
+              <select x-model="edit.check_interval"
+                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                <option value="60">1 minute</option>
+                <option value="300">5 minutes</option>
+                <option value="900">15 minutes</option>
+                <option value="1800">30 minutes</option>
+                <option value="3600">1 hour</option>
+                <option value="7200">2 hours</option>
+                <option value="21600">6 hours</option>
+                <option value="43200">12 hours</option>
+                <option value="86400">24 hours</option>
+              </select>
+            </div>
+            <div class="w-32">
+              <label class="block text-sm text-gray-400 mb-1">Jitter</label>
+              <select x-model="edit.jitter_pct"
+                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                <option value="0">0%</option>
+                <option value="5">5%</option>
+                <option value="10">10%</option>
+                <option value="25">25%</option>
+                <option value="50">50%</option>
+              </select>
+            </div>
           </div>
           <div>
             <label class="block text-sm text-gray-400 mb-1">ntfy Topic <span class="text-gray-600 text-xs">(optional)</span></label>
@@ -271,6 +308,7 @@ function siteDetail() {
     checking: false,
     isActive: {{ 'true' if site.is_active else 'false' }},
     changesOnly: true,
+    hideErrors: false,
     showEditModal: false,
     saving: false,
     editError: '',
@@ -281,6 +319,7 @@ function siteDetail() {
       name: {{ site.name | tojson }},
       url: {{ site.url | tojson }},
       check_interval: {{ site.check_interval }},
+      jitter_pct: {{ site.jitter_pct }},
       ntfy_topic: {{ (site.ntfy_topic or '') | tojson }},
     },
 
@@ -319,6 +358,7 @@ function siteDetail() {
           name: this.edit.name,
           url: this.edit.url,
           check_interval: parseInt(this.edit.check_interval),
+          jitter_pct: parseInt(this.edit.jitter_pct),
           ntfy_topic: this.edit.ntfy_topic || null,
         };
         const resp = await fetch(`/sites/{{ site.id }}`, {

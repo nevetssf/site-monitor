@@ -6,6 +6,7 @@ class SiteCreate(BaseModel):
     name: str
     url: str
     check_interval: int = 300
+    jitter_pct: int = 10
     is_active: bool = True
     ntfy_topic: str | None = None
 
@@ -14,6 +15,7 @@ class SiteUpdate(BaseModel):
     name: str | None = None
     url: str | None = None
     check_interval: int | None = None
+    jitter_pct: int | None = None
     is_active: bool | None = None
     ntfy_topic: str | None = None
 
@@ -23,6 +25,7 @@ class SiteResponse(BaseModel):
     name: str
     url: str
     check_interval: int
+    jitter_pct: int
     is_active: bool
     ntfy_topic: str | None
     created_at: datetime

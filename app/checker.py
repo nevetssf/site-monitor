@@ -109,7 +109,7 @@ async def check_site(site_id: int) -> None:
         global_topic = await get_setting(session, "ntfy_topic") or "site-monitor"
         effective_topic = site.ntfy_topic or global_topic
 
-        # Load previous snapshot
+        # Load previous snapshot (most recent without error)
         prev_result = await session.execute(
             select(Snapshot)
             .where(Snapshot.site_id == site_id, Snapshot.error_message.is_(None))
@@ -117,6 +117,7 @@ async def check_site(site_id: int) -> None:
             .limit(1)
         )
         prev_snapshot = prev_result.scalar_one_or_none()
+
 
         error_message = None
         png_bytes = None
@@ -139,8 +140,8 @@ async def check_site(site_id: int) -> None:
                 changed = False
                 diff_score = 0.0
             else:
-                # HTML changed — do pixel diff
-                if prev_snapshot.screenshot_path:
+                # HTML changed — do pixel diff against previous screenshot
+                if prev_snapshot and prev_snapshot.screenshot_path:
                     prev_path = SCREENSHOTS_DIR / prev_snapshot.screenshot_path
                     if prev_path.exists():
                         prev_bytes = prev_path.read_bytes()
@@ -151,7 +152,7 @@ async def check_site(site_id: int) -> None:
                 else:
                     changed = True
 
-            # Save screenshot
+            # Save screenshot for every capture
             site_dir = SCREENSHOTS_DIR / str(site_id)
             site_dir.mkdir(parents=True, exist_ok=True)
             filename = f"{uuid.uuid4()}.png"

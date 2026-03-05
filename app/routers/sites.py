@@ -1,3 +1,4 @@
+from datetime import timezone
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
@@ -10,7 +11,7 @@ from app.checker import check_site, SCREENSHOTS_DIR
 from app.database import get_session
 from app.models import Site, Snapshot
 from app.schemas import SiteCreate, SiteResponse, SiteUpdate
-from app.scheduler import add_or_replace_job, remove_job
+from app.scheduler import add_or_replace_job, remove_job, get_next_run_time
 
 router = APIRouter()
 TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
@@ -101,7 +102,7 @@ async def create_site(
     await session.refresh(site)
 
     if site.is_active:
-        add_or_replace_job(site.id, site.check_interval)
+        add_or_replace_job(site.id, site.check_interval, site.jitter_pct)
 
     return site
 
@@ -128,6 +129,9 @@ async def site_detail(
             latest_screenshot = f"/snapshots/{snap.id}/screenshot"
             break
 
+    next_run = get_next_run_time(site_id)
+    next_run_utc = next_run.astimezone(timezone.utc) if next_run else None
+
     return templates.TemplateResponse(
         "site_detail.html",
         {
@@ -135,6 +139,7 @@ async def site_detail(
             "site": site,
             "snapshots": snapshots,
             "latest_screenshot": latest_screenshot,
+            "next_run_time": next_run_utc.strftime("%Y-%m-%dT%H:%M:%S") if next_run_utc else None,
         },
     )
 
@@ -156,7 +161,7 @@ async def update_site(
     await session.refresh(site)
 
     if site.is_active:
-        add_or_replace_job(site.id, site.check_interval)
+        add_or_replace_job(site.id, site.check_interval, site.jitter_pct)
     else:
         remove_job(site.id)
 
@@ -192,7 +197,7 @@ async def toggle_site(site_id: int, session: AsyncSession = Depends(get_session)
     await session.refresh(site)
 
     if site.is_active:
-        add_or_replace_job(site.id, site.check_interval)
+        add_or_replace_job(site.id, site.check_interval, site.jitter_pct)
     else:
         remove_job(site.id)
 

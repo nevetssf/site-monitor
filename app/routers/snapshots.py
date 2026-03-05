@@ -44,6 +44,11 @@ async def serve_screenshot(snapshot_id: int, session: AsyncSession = Depends(get
     if not snap or not snap.screenshot_path:
         raise HTTPException(status_code=404, detail="Screenshot not found")
 
+    # Guard: screenshot_path must start with the correct site_id directory
+    expected_prefix = f"{snap.site_id}/"
+    if not snap.screenshot_path.startswith(expected_prefix):
+        raise HTTPException(status_code=500, detail="Screenshot path site mismatch")
+
     path = SCREENSHOTS_DIR / snap.screenshot_path
     if not path.exists():
         raise HTTPException(status_code=404, detail="Screenshot file not found")

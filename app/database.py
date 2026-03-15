@@ -22,6 +22,7 @@ DEFAULT_SETTINGS = {
     "screenshot_retention_days": "7",
     "request_timeout": "30",
     "pixel_diff_threshold": "1.0",
+    "unavailable_notify_hours": "24",
 }
 
 
@@ -29,14 +30,15 @@ async def init_db() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         # Migrate: add jitter_pct column if it doesn't exist (existing DBs)
-        try:
-            await conn.execute(
-                __import__("sqlalchemy").text(
-                    "ALTER TABLE sites ADD COLUMN jitter_pct INTEGER DEFAULT 10"
-                )
-            )
-        except Exception:
-            pass  # Column already exists
+        for stmt in [
+            "ALTER TABLE sites ADD COLUMN jitter_pct INTEGER DEFAULT 10",
+            "ALTER TABLE sites ADD COLUMN unavailable_since DATETIME",
+            "ALTER TABLE sites ADD COLUMN unavailable_notified BOOLEAN DEFAULT 0",
+        ]:
+            try:
+                await conn.execute(__import__("sqlalchemy").text(stmt))
+            except Exception:
+                pass  # Column already exists
 
     async with AsyncSessionLocal() as session:
         for key, value in DEFAULT_SETTINGS.items():

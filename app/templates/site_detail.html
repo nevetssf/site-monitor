@@ -31,6 +31,7 @@
             'changed': 'bg-red-500/20 text-red-400',
             'unchanged': 'bg-green-500/20 text-green-400',
             'error': 'bg-red-700/20 text-red-500',
+            'unavailable': 'bg-orange-500/20 text-orange-400',
           } %}
           <span class="text-sm font-semibold px-3 py-1 rounded-full {{ status_map.get(site.last_status, 'bg-gray-700 text-gray-400') }}">
             {{ site.last_status.upper() }}
@@ -178,7 +179,9 @@
           <!-- Info -->
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-1">
-              {% if snap.error_message %}
+              {% if snap.error_message == "Website unavailable" %}
+              <span class="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">UNAVAILABLE</span>
+              {% elif snap.error_message %}
               <span class="text-xs bg-red-700/20 text-red-400 px-2 py-0.5 rounded-full">ERROR</span>
               {% elif snap.changed %}
               <span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full">CHANGED</span>

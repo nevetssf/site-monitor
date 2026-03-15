@@ -21,6 +21,8 @@ class Site(Base):
     last_checked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     last_changed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     last_status: Mapped[str] = mapped_column(String(20), default="pending")
+    unavailable_since: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    unavailable_notified: Mapped[bool] = mapped_column(Boolean, default=False)
 
     snapshots: Mapped[list["Snapshot"]] = relationship(
         "Snapshot", back_populates="site", cascade="all, delete-orphan"

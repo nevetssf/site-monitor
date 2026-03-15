@@ -89,6 +89,19 @@
         />
         <p class="text-xs text-gray-600 mt-1">Screenshots older than this are automatically deleted.</p>
       </div>
+
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Hours Down Before Notifying</label>
+        <input
+          x-model="settings.unavailable_notify_hours"
+          type="number"
+          min="0"
+          max="720"
+          step="1"
+          class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+        />
+        <p class="text-xs text-gray-600 mt-1">Send a "site down" notification after this many hours of continuous unavailability. Set to 0 to notify immediately.</p>
+      </div>
     </div>
 
     <!-- Save button -->

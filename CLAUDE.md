@@ -36,9 +36,12 @@ Site Monitor is a FastAPI app that periodically captures screenshots and HTML of
 **Key modules:**
 - `app/checker.py` — all capture/diff/alert logic; Playwright runs with `domcontentloaded` + 3s wait
 - `app/scheduler.py` — wraps APScheduler; jobs are recreated when a site's interval changes
+- `app/database.py` — async engine setup, session factory, `init_db()` seeds default settings, auto-detects Docker vs local data path
 - `app/models.py` — three SQLAlchemy models: `Site`, `Snapshot`, `Setting`
+- `app/schemas.py` — Pydantic models for API request/response validation
 - `app/routers/` — three routers: `sites.py` (dashboard + CRUD), `snapshots.py` (history + image serving), `settings.py` (global config + ntfy test)
 - `app/templates/` — Jinja2 templates using Alpine.js + Tailwind CSS; UTC→local time conversion in `base.html`
+- `app/static/js/app.js` — Alpine.js components for dashboard interactivity
 
 **Data storage:**
 - DB: `data/monitor.db` (SQLite, async via aiosqlite)
@@ -49,5 +52,13 @@ Site Monitor is a FastAPI app that periodically captures screenshots and HTML of
 - `PIXEL_DIFF_THRESHOLD` — % changed pixels to trigger alert (default 1.0)
 - `SCREENSHOT_RETENTION_DAYS` — auto-cleanup age (default 30)
 - `REQUEST_TIMEOUT` — Playwright page load timeout (default 30s)
+
+**API endpoints:**
+- `GET /healthz` — health check (used by Docker healthcheck)
+- All site/snapshot/settings routes are in `app/routers/`
+
+**Docker notes:**
+- `shm_size: 256m` is required in docker-compose for Playwright/Chromium to work reliably
+- Container data path is `/app/data`, mapped to `./data` on host
 
 **Frontend:** Alpine.js components for dashboard polling, toggle/check-now actions, and lazy screenshot loading. No build step — Tailwind is loaded via CDN.
